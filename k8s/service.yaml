@@ -1,0 +1,15 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: grandstream-snmp-exporter
+  namespace: grandstream-monitoring
+  labels:
+    app: grandstream-snmp-exporter
+spec:
+  selector:
+    app: grandstream-snmp-exporter
+  ports:
+  - name: metrics
+    port: 9109
+    targetPort: 9109

@@ -1,0 +1,463 @@
+-- Copyright 2021 Grandstream Networks, Inc. All Rights Reserved.
+
+GRANDSTREAM-GWN-PRODUCTS-L2-LITE-SWITCH-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+    gwnProducts
+	FROM GRANDSTREAM-GWN-ROOT-MIB
+	MODULE-IDENTITY,
+	NOTIFICATION-TYPE,
+	OBJECT-TYPE,
+	Integer32,
+	Counter32,
+	Unsigned32
+			FROM SNMPv2-SMI
+	TEXTUAL-CONVENTION,
+	DisplayString,
+	TimeStamp,
+	TruthValue,
+	RowStatus,MacAddress
+			FROM SNMPv2-TC
+	MODULE-COMPLIANCE,
+	OBJECT-GROUP,
+	NOTIFICATION-GROUP
+			FROM SNMPv2-CONF
+	SnmpAdminString
+			FROM SNMP-FRAMEWORK-MIB;
+
+
+gwnSwitchMIB MODULE-IDENTITY
+        LAST-UPDATED    "202312231201Z"
+        ORGANIZATION    "Grandstream Networks, Inc."
+        CONTACT-INFO 	""
+        DESCRIPTION     "Grandstream product switch mib."
+        ::= { gwnProducts 4 }
+
+-- Textual Conventions
+
+ErrDisableFeatureID ::= TEXTUAL-CONVENTION
+    STATUS          current
+    DESCRIPTION
+        "An integer-value assigned to various features/events
+		that can error disable a system entity"
+    SYNTAX          INTEGER  {
+						selfLoop(3),
+						selfloopDetect(12)
+                    }
+
+-- 1.3.6.1.4.1.42397.1.4.3
+gwnSwitchErrDisableMIB MODULE-IDENTITY
+    LAST-UPDATED "202312231201Z"
+    ORGANIZATION "Grandstream Networks, Inc."
+    CONTACT-INFO ""
+    DESCRIPTION
+    "Grandstream switch syslog module mib"
+    ::= { gwnSwitchMIB 3 }
+
+errDisableIfStatusTable OBJECT-TYPE
+    SYNTAX          SEQUENCE OF errDisableIfStatusEntry
+    MAX-ACCESS      not-accessible
+    STATUS          current
+    DESCRIPTION
+        "This table provides interface (port) specific
+        error-disable status information. Each conceptual row
+        provides status information about a {interface}
+        disabled by a feature."
+    ::= { gwnSwitchErrDisableMIB 1 }
+
+errDisableIfStatusEntry OBJECT-TYPE
+    SYNTAX          errDisableIfStatusEntry
+    MAX-ACCESS      not-accessible
+    STATUS          current
+    DESCRIPTION
+        "A collection of objects that specify the status of an
+        error-disabled Interface"
+    INDEX           {ifIndex}
+    ::= { errDisableIfStatusTable 1 }
+
+errDisableIfStatusEntry ::= SEQUENCE {
+        errDisableIfStatusCause        ErrDisableFeatureID,
+}
+
+errDisableIfStatusCause OBJECT-TYPE
+    SYNTAX          ErrDisableFeatureID
+    MAX-ACCESS      not-accessible
+    STATUS          current
+    DESCRIPTION
+        "This object specifies the feature/event that caused the
+        interface to be error-disabled."
+    ::= { errDisableIfStatusEntry 1 }
+
+-- notifications
+
+errDisableMIBNotificationPrefix    OBJECT IDENTIFIER
+                              ::= { gwnSwitchErrDisableMIB 2 }
+errDisableMIBNotifications         OBJECT IDENTIFIER
+                              ::= { errDisableMIBNotificationPrefix 0 }
+
+errDisableNotification NOTIFICATION-TYPE
+        OBJECTS { errDisableIfStatusCause        }
+        STATUS     current
+        DESCRIPTION
+                ""
+        ::= { errDisableMIBNotifications 1 }
+
+-- Textual Conventions
+
+VlanIndex ::= TEXTUAL-CONVENTION
+    STATUS          current
+    DESCRIPTION
+        "The VLAN-id of a VLAN on ISL or 802.1q trunks."
+    SYNTAX          Integer32 (0..4095)
+
+-- 1.3.6.1.4.1.42397.1.4.4
+gwnSwitchvlanMIB MODULE-IDENTITY
+    LAST-UPDATED "202312231201Z"
+    ORGANIZATION "Grandstream Networks, Inc."
+    CONTACT-INFO ""
+    DESCRIPTION
+    "Grandstream switch vlan module mib"
+    ::= { gwnSwitchMIB 4 }
+
+vlanTable OBJECT-TYPE
+    SYNTAX          SEQUENCE OF vlanEntry
+    MAX-ACCESS      not-accessible
+    STATUS          current
+    DESCRIPTION
+        "This table contains information on the VLANs which
+        currently exist."
+    ::= { gwnSwitchvlanMIB 1 }
+
+vlanEntry OBJECT-TYPE
+    SYNTAX          vlanEntry
+    MAX-ACCESS      not-accessible
+    STATUS          current
+    DESCRIPTION
+        ""
+    INDEX           {vlanIndex}
+    ::= { vlanTable 1 }
+
+vlanEntry ::= SEQUENCE {
+       vlanIndex              	 VlanIndex,
+       vlanName               	DisplayString
+}
+
+vlanIndex OBJECT-TYPE
+    SYNTAX          VlanIndex
+    MAX-ACCESS      not-accessible
+    STATUS          current
+    DESCRIPTION
+        "The VLAN-id of this VLAN on ISL or 802.1q trunks."
+    ::= { vlanEntry 1 }
+
+vlanName OBJECT-TYPE
+    SYNTAX          DisplayString (SIZE  (1..32))
+    MAX-ACCESS      not-accessible
+    STATUS          current
+    DESCRIPTION
+        "The name of this VLAN."
+    ::= { vlanEntry 2 }
+
+-- notifications
+
+vlanMIBNotificationPrefix    OBJECT IDENTIFIER
+                              ::= { gwnSwitchvlanMIB 2 }
+vlanMIBNotifications         OBJECT IDENTIFIER
+                              ::= { vlanMIBNotificationPrefix 0 }
+
+vlanCreated NOTIFICATION-TYPE
+        OBJECTS { vlanName       }
+        STATUS     current
+        DESCRIPTION
+                ""
+        ::= { vlanMIBNotifications 1 }
+
+vlanDeleted NOTIFICATION-TYPE
+        OBJECTS { vlanName       }
+        STATUS     current
+        DESCRIPTION
+                ""
+        ::= { vlanMIBNotifications 2 }
+
+
+
+-- Textual Conventions
+
+ConfigEventMedium ::= TEXTUAL-CONVENTION
+    STATUS          current
+    DESCRIPTION
+            "Configuration file distribution.
+
+            import            Configuration Import
+            "
+    SYNTAX          INTEGER  {
+                        import(4)
+                    }
+
+
+-- 1.3.6.1.4.1.42397.1.4.7
+gwnSwitchConfigMIB MODULE-IDENTITY
+    LAST-UPDATED "202312231201Z"
+    ORGANIZATION "Grandstream Networks, Inc."
+    CONTACT-INFO ""
+    DESCRIPTION
+    "Configuration management MIB"
+    ::= { gwnSwitchMIB 7}
+
+configBasicObjects     OBJECT IDENTIFIER
+    ::= { gwnSwitchConfigMIB 1 }
+
+configEventObjects     OBJECT IDENTIFIER
+    ::= { configBasicObjects 1 }
+
+
+configEventDest OBJECT-TYPE
+     SYNTAX          ConfigEventMedium
+     MAX-ACCESS      not-accessible
+     STATUS          current
+     DESCRIPTION
+         ""
+    ::= { configEventObjects 3 }
+
+
+-- notifications
+
+configMIBNotificationPrefix    OBJECT IDENTIFIER
+                              ::= { gwnSwitchConfigMIB 2 }
+configMIBNotifications         OBJECT IDENTIFIER
+                              ::= { configMIBNotificationPrefix 0 }
+
+cfgEventNotification NOTIFICATION-TYPE
+        OBJECTS {
+					configEventDest
+				}
+        STATUS     current
+        DESCRIPTION
+                ""
+        ::= { configMIBNotifications 1 }
+
+
+-- Textual Conventions
+
+GWNPoePortEventType ::= TEXTUAL-CONVENTION
+    STATUS          current
+    DESCRIPTION
+            "Indicates the type of the event that causes the status of the POE port to change.
+
+				disconnect 		        A device disconnect is detected
+				powerOn 		        The device starts to supply power to PD
+				currentOver 	        The power supply stops because the port current is too high
+				mainPowerOver           If the total device power usage exceeds the threshold,
+								        power off the port with a lower priority
+                UsageExceedThreshold    When the power consumed by the PSE/the total available power of the PSE exceeds 80%
+                                        Alarm prompt
+            "
+    SYNTAX          INTEGER  {
+                        disconnect(1),
+                        powerOn(2),
+                        currentOver(3),
+                        mainPowerOver(4),
+                        UsageExceedThreshold(5)
+                    }
+
+-- 1.3.6.1.4.1.42397.1.4.8
+gwnPowerEthernetExtMIB MODULE-IDENTITY
+    LAST-UPDATED "202312231201Z"
+    ORGANIZATION "Grandstream Networks, Inc."
+    CONTACT-INFO ""
+    DESCRIPTION
+    "A MIB module for extending the POWER-ETHERNET-MIB
+	(RFC3621) to add objects which provide additional management
+	information about Power Sourcing Equipment (PSE)
+	not available in POWER-ETHERNET-MIB."
+    ::= { gwnSwitchMIB 8}
+
+poeExtObjects     OBJECT IDENTIFIER
+    ::= { gwnPowerEthernetExtMIB 1 }
+
+poeExtPortEventTable OBJECT-TYPE
+    SYNTAX          SEQUENCE OF poeExtPortEventEntry
+    MAX-ACCESS      not-accessible
+	STATUS          current
+    DESCRIPTION
+            ""
+    ::= { poeExtObjects 1 }
+
+poeExtPortEventEntry OBJECT-TYPE
+        SYNTAX     poeExtPortEventEntry
+        MAX-ACCESS not-accessible
+        STATUS     current
+        DESCRIPTION
+                ""
+        INDEX   { ifIndex }
+        ::= { poeExtPortEventTable 1 }
+
+poeExtPortEventEntry ::=
+    SEQUENCE {
+        poeExtPortEventType       GWNPoePortEventType
+    }
+
+poeExtPortEventType OBJECT-TYPE
+     SYNTAX          GWNPoePortEventType
+     MAX-ACCESS      not-accessible
+     STATUS          current
+     DESCRIPTION
+         ""
+    ::= { poeExtPortEventEntry 1 }
+
+-- notifications
+
+poeMIBNotificationPrefix    OBJECT IDENTIFIER
+                              ::= { gwnPowerEthernetExtMIB 2 }
+poeMIBNotifications         OBJECT IDENTIFIER
+                              ::= { poeMIBNotificationPrefix 0 }
+
+poeEventNotification NOTIFICATION-TYPE
+        OBJECTS {
+					poeExtPortEventType
+				}
+        STATUS     current
+        DESCRIPTION
+                ""
+        ::= { poeMIBNotifications 1 }
+
+poeExtMonitorObjects OBJECT IDENTIFIER
+    ::= { gwnPowerEthernetExtMIB 3 }
+
+poeExtGlobalVoltage OBJECT IDENTIFIER
+    ::= { poeExtMonitorObjects 1 }
+
+poeExtInputVoltage OBJECT-TYPE
+    SYNTAX          Integer32 (40000..57000)
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+        "Global input voltage of the POE device, measured in millivolts (mV).
+        Example: 48000 indicates an input voltage of 48V DC."
+    ::= { poeExtGlobalVoltage 1 }
+
+poeExtChipTable OBJECT-TYPE
+    SYNTAX          SEQUENCE OF PoeExtChipEntry
+    MAX-ACCESS      not-accessible
+    STATUS          current
+    DESCRIPTION
+        "A table containing operational data for each POE chip in the device.
+        Each row corresponds to a single POE chip."
+    ::= { poeExtMonitorObjects 2 }
+
+poeExtChipEntry OBJECT-TYPE
+    SYNTAX          PoeExtChipEntry
+    MAX-ACCESS      not-accessible
+    STATUS          current
+    DESCRIPTION
+        "Entry containing data for a specific POE chip."
+    INDEX           { poeExtChipIndex }
+    ::= { poeExtChipTable 1 }
+
+PoeExtChipEntry ::=
+    SEQUENCE {
+        poeExtChipIndex      Integer32,
+        poeExtChipVoltage    Integer32
+    }
+
+poeExtChipIndex OBJECT-TYPE
+    SYNTAX          Integer32 (1..2)
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+        "Unique index for identifying POE chips. 
+        For devices with 2 chips, values are 1 and 2."
+    ::= { poeExtChipEntry 1 }
+
+poeExtChipVoltage OBJECT-TYPE
+    SYNTAX          Integer32 (900..1300)
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+        "Operating voltage of the specified POE chip, measured in millivolts (mV).
+        Example: 1200 indicates a chip voltage of 1.2V DC."
+    ::= { poeExtChipEntry 2 }
+
+poeExtPortVoltageTable OBJECT-TYPE
+    SYNTAX          SEQUENCE OF PoeExtPortEntry
+    MAX-ACCESS      not-accessible
+    STATUS          current
+    DESCRIPTION
+        "Output voltage monitoring table for each POE-enabled port on the device."
+    ::= { poeExtMonitorObjects 3 }
+
+PoeExtPortEntry OBJECT-TYPE
+    SYNTAX          PoeExtPortEntry
+    MAX-ACCESS      not-accessible
+    STATUS          current
+    DESCRIPTION
+        "Entry containing output voltage data for a specific POE port."
+    INDEX           { poeExtPortIndex }
+    ::= { poeExtPortVoltageTable 1 }
+
+PoeExtPortEntry ::=
+    SEQUENCE {
+        poeExtPortIndex         Integer32,
+        poeExtPortOutputVoltage Integer32,
+        poeExtPortOutputPower   Integer32
+    }
+
+poeExtPortIndex OBJECT-TYPE
+    SYNTAX          Integer32 (1..24)
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+        "Unique index for identifying POE ports. 
+        Typically corresponds to the physical port numbering on the device panel (1-based)."
+    ::= { PoeExtPortEntry 1 }
+
+poeExtPortOutputVoltage OBJECT-TYPE
+    SYNTAX          Integer32 (44000..57000)
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+        "Actual output voltage of the specified POE port, measured in millivolts (mV).
+        Example: 48000 indicates a port output voltage of 48V DC.
+        Returns 0 or a device-specific default if the port is disabled, not POE-enabled, or has no connected load."
+    ::= { PoeExtPortEntry 2 }
+
+poeExtPortOutputPower OBJECT-TYPE
+    SYNTAX          Integer32 (0..30000)
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+        "Actual output power of the specified POE port, measured in milliwatts (mW).
+        Returns 0 if the port is disabled, not POE-enabled, or has no connected load."
+    ::= { PoeExtPortEntry 3 }
+
+poeExtPowerMonitor OBJECT IDENTIFIER
+    ::= { poeExtMonitorObjects 4 }
+
+poeExtTotalPower OBJECT-TYPE
+    SYNTAX          Integer32 (0..65535)
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+        "Global input total power of the POE device, measured in milliwatts (mW).
+        For the specific version (GWN7721P V117.19.0.24 v1.1A), this value is 35000 mW (35W)."
+    ::= { poeExtPowerMonitor 1 }
+
+poeExtUsedPower OBJECT-TYPE
+    SYNTAX          Integer32 (0..65535)
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+        "Global used power of the POE device, sum of power consumption of all POE-enabled ports.
+        Measured in milliwatts (mW)."
+    ::= { poeExtPowerMonitor 2 }
+
+poeExtPowerUsageRate OBJECT-TYPE
+    SYNTAX          Integer32 (0..100)
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+        "Current POE power usage rate, calculated as (poeExtUsedPower / poeExtTotalPower) * 100,
+        rounded to nearest integer. Unit: percentage (%)."
+    ::= { poeExtPowerMonitor 3 }
+
+END

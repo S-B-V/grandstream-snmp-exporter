@@ -1,0 +1,20 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: grandstream-snmp-exporter
+  namespace: grandstream-monitoring
+  labels:
+    # Change this to match your Prometheus Operator selector (often your Helm release label)
+    release: kube-prometheus-stack
+spec:
+  selector:
+    matchLabels:
+      app: grandstream-snmp-exporter
+  namespaceSelector:
+    matchNames:
+    - grandstream-monitoring
+  endpoints:
+  - port: metrics
+    path: /metrics
+    interval: 30s
+    scrapeTimeout: 10s

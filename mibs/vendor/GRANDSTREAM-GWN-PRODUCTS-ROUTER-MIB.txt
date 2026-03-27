@@ -1,0 +1,857 @@
+﻿-- Copyright 2021 Grandstream Networks, Inc. All Rights Reserved.
+
+GRANDSTREAM-GWN-PRODUCTS-ROUTER-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+    gwnRouter
+        FROM GRANDSTREAM-GWN-PRODUCTS-MIB
+    DisplayString,
+    MacAddress,
+    RowStatus,
+    TruthValue
+        FROM SNMPv2-TC
+    OBJECT-GROUP
+        FROM SNMPv2-CONF
+    ifIndex,
+    InterfaceIndex
+        FROM IF-MIB
+    MODULE-IDENTITY,
+    OBJECT-TYPE,
+    NOTIFICATION-TYPE,
+    Counter32,
+    Integer32,
+    IpAddress
+        FROM SNMPv2-SMI;
+
+
+-- 1.3.6.1.4.1.42397.1.2
+-- gwnRouter
+
+-- 1.3.6.1.4.1.42397.1.2.1
+gwnRouterWireless MODULE-IDENTITY
+    LAST-UPDATED "202110280001Z"
+    ORGANIZATION "Grandstream Networks, Inc."
+    CONTACT-INFO ""
+    DESCRIPTION
+    "Grandstream gwnRouterWireless product OID registration mib."
+    ::= { gwnRouter 1 }
+
+
+-- 1.3.6.1.4.1.42397.1.2.1.1
+gwnRouterWirelessRadioTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF GwnRouterWirelessRadioEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION "Radio Table."
+    ::= { gwnRouterWireless 1 }
+
+-- 1.3.6.1.4.1.42397.1.2.1.1.1
+gwnRouterWirelessRadioEntry OBJECT-TYPE
+    SYNTAX GwnRouterWirelessRadioEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION "Describes each radio."
+    INDEX { gwnRouterWirelessRadioIndex }
+    ::= { gwnRouterWirelessRadioTable 1 }
+
+GwnRouterWirelessRadioEntry ::= SEQUENCE {
+    gwnRouterWirelessRadioIndex
+        Integer32,
+    gwnRouterWirelessRadioName
+        DisplayString,
+    gwnRouterWirelessRadioCountry
+        DisplayString,
+    gwnRouterWirelessRadioStatus
+        Integer32,
+    gwnRouterWirelessRadioChannelWidth
+        DisplayString,
+    gwnRouterWirelessRadioChannel
+        Integer32,
+    gwnRouterWirelessRadioTransmitPower
+        Integer32,
+    gwnRouterWirelessRadioMiniRSSI
+        Integer32,
+    gwnRouterWirelessRadioMiniRate
+        Integer32
+}
+
+-- 1.3.6.1.4.1.42397.1.2.1.1.1.1
+gwnRouterWirelessRadioIndex OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION "Radio id, Remains the same even
+                 if the name of the radio changes"
+    ::= { gwnRouterWirelessRadioEntry 1 }
+
+-- 1.3.6.1.4.1.42397.1.2.1.1.1.2
+gwnRouterWirelessRadioName OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION "Radio name."
+    ::= { gwnRouterWirelessRadioEntry 2 }
+
+-- 1.3.6.1.4.1.42397.1.2.1.1.1.3
+gwnRouterWirelessRadioCountry OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION "Radio country."
+    ::= { gwnRouterWirelessRadioEntry 3 }
+
+-- 1.3.6.1.4.1.42397.1.2.1.1.1.4
+gwnRouterWirelessRadioStatus OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION "Radio status."
+    ::= { gwnRouterWirelessRadioEntry 4 }
+
+-- 1.3.6.1.4.1.42397.1.2.1.1.1.5
+gwnRouterWirelessRadioChannelWidth OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION "Radio Channel Width."
+    ::= { gwnRouterWirelessRadioEntry 5 }
+
+-- 1.3.6.1.4.1.42397.1.2.1.1.1.6
+gwnRouterWirelessRadioChannel OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION "Radio Channel."
+    ::= { gwnRouterWirelessRadioEntry 6 }
+
+-- 1.3.6.1.4.1.42397.1.2.1.1.1.7
+gwnRouterWirelessRadioTransmitPower OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION "Radio transmit power."
+    ::= { gwnRouterWirelessRadioEntry 7 }
+
+-- 1.3.6.1.4.1.42397.1.2.1.1.1.8
+gwnRouterWirelessRadioMiniRSSI OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION "Radio mini rssi."
+    ::= { gwnRouterWirelessRadioEntry 8 }
+
+-- 1.3.6.1.4.1.42397.1.2.1.1.1.9
+gwnRouterWirelessRadioMiniRate OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION "Radio mini rate."
+    ::= { gwnRouterWirelessRadioEntry 9 }
+
+-- 1.3.6.1.4.1.42397.1.2.1.2
+gwnRouterWirelessWlanTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF GwnRouterWirelessWlanEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION "Wlan Table."
+    ::= { gwnRouterWireless 2 }
+
+-- 1.3.6.1.4.1.42397.1.2.1.2.1
+gwnRouterWirelessWlanEntry OBJECT-TYPE
+    SYNTAX GwnRouterWirelessWlanEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION "Describes each SSID."
+    INDEX { gwnRouterWirelessWlanIndex }
+    ::= { gwnRouterWirelessWlanTable 1 }
+
+GwnRouterWirelessWlanEntry ::= SEQUENCE {
+    gwnRouterWirelessWlanIndex
+        Integer32,
+    gwnRouterWirelessWlanESSID
+        DisplayString,
+    gwnRouterWirelessWlanBSSID
+        DisplayString,
+    gwnRouterWirelessWlanEncryption
+        DisplayString,
+    gwnRouterWirelessWlanBand
+        DisplayString,
+    gwnRouterWirelessWlanIsolation
+        DisplayString,
+    gwnRouterWirelessWlanNumSta
+        Counter32,
+    gwnRouterWirelessWlanRxPkts
+        Counter32,
+    gwnRouterWirelessWlanRxBytes
+        Counter32,
+    gwnRouterWirelessWlanTxPkts
+        Counter32,
+    gwnRouterWirelessWlanTxBytes
+        Counter32
+}
+
+-- 1.3.6.1.4.1.42397.1.2.1.2.1.1
+gwnRouterWirelessWlanIndex OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION "Wlan id, Remains the same even
+                 if the name of the wlan changes"
+    ::= { gwnRouterWirelessWlanEntry 1 }
+
+-- 1.3.6.1.4.1.42397.1.2.3.2.1.2
+gwnRouterWirelessWlanESSID OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION "Wlan essid"
+    ::= { gwnRouterWirelessWlanEntry 2 }
+
+-- 1.3.6.1.4.1.42397.1.2.1.2.1.3
+gwnRouterWirelessWlanBSSID OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION "Wlan bssid"
+    ::= { gwnRouterWirelessWlanEntry 3 }
+
+-- 1.3.6.1.4.1.42397.1.2.1.2.1.4
+gwnRouterWirelessWlanEncryption OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION "Wlan encryption"
+    ::= { gwnRouterWirelessWlanEntry 4 }
+
+-- 1.3.6.1.4.1.42397.1.2.1.2.1.5
+gwnRouterWirelessWlanBand OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION "Wlan band"
+    ::= { gwnRouterWirelessWlanEntry 5 }
+
+-- 1.3.6.1.4.1.42397.1.2.1.2.1.6
+gwnRouterWirelessWlanIsolation OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION "Wlan Isolation"
+    ::= { gwnRouterWirelessWlanEntry 6 }
+
+-- 1.3.6.1.4.1.42397.1.2.1.2.1.7
+gwnRouterWirelessWlanNumSta OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION "Wlan sta number"
+    ::= { gwnRouterWirelessWlanEntry 7 }
+
+-- 1.3.6.1.4.1.42397.1.2.1.2.1.8
+gwnRouterWirelessWlanRxPkts OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION "Wlan receive pkts"
+    ::= { gwnRouterWirelessWlanEntry 8 }
+
+-- 1.3.6.1.4.1.42397.1.2.1.2.1.9
+gwnRouterWirelessWlanRxBytes OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION "Wlan receive bytes"
+    ::= { gwnRouterWirelessWlanEntry 9 }
+
+-- 1.3.6.1.4.1.42397.1.2.1.2.1.10
+gwnRouterWirelessWlanTxPkts OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION "Wlan send packets"
+    ::= { gwnRouterWirelessWlanEntry 10 }
+
+-- 1.3.6.1.4.1.42397.1.2.1.2.1.11
+gwnRouterWirelessWlanTxBytes OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION "Wlan send bytes"
+    ::= { gwnRouterWirelessWlanEntry 11 }
+
+
+-- 1.3.6.1.4.1.42397.1.2.1.3
+gwnRouterWirelessClientTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF GwnRouterWirelessClientEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION "Radio Table."
+    ::= { gwnRouterWireless 3 }
+
+-- 1.3.6.1.4.1.42397.1.2.1.3.1
+gwnRouterWirelessClientEntry OBJECT-TYPE
+    SYNTAX GwnRouterWirelessClientEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION "Describes each client."
+    INDEX { gwnRouterWirelessClientIndex }
+    ::= { gwnRouterWirelessClientTable 1 }
+
+GwnRouterWirelessClientEntry ::= SEQUENCE {
+    gwnRouterWirelessClientIndex
+        Integer32,
+    gwnRouterWirelessClientMACAddress
+        DisplayString,
+    gwnRouterWirelessClientAPMACAddress
+        DisplayString,
+    gwnRouterWirelessClientIPv4Address
+        DisplayString,
+    gwnRouterWirelessClientIPv6Address
+        DisplayString,
+    gwnRouterWirelessClientWlanBand
+        DisplayString,
+    gwnRouterWirelessClientWlanESSID
+        DisplayString,
+    gwnRouterWirelessClientRSSI
+        Integer32,
+    gwnRouterWirelessClientAssoctime
+        TimeTicks,
+    gwnRouterWirelessClientManufacture
+        DisplayString,
+    gwnRouterWirelessClientHostname
+        DisplayString,
+    gwnRouterWirelessClientOS
+        DisplayString,
+    gwnRouterWirelessClientRxPkts
+        Counter32,
+    gwnRouterWirelessClientRxBytes
+        Counter32,
+    gwnRouterWirelessClientTxPkts
+        Counter32,
+    gwnRouterWirelessClientTxBytes
+        Counter32
+}
+
+-- 1.3.6.1.4.1.42397.1.2.1.3.1.1
+gwnRouterWirelessClientIndex OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION "client id, Remains the same even
+                 if the name of the client changes"
+    ::= { gwnRouterWirelessClientEntry 1 }
+
+-- 1.3.6.1.4.1.42397.1.2.1.3.1.2
+gwnRouterWirelessClientMACAddress OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION "Client mac."
+    ::= { gwnRouterWirelessClientEntry 2 }
+
+-- 1.3.6.1.4.1.42397.1.2.1.3.1.3
+gwnRouterWirelessClientAPMACAddress OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "MAC address of the WLAN associated with the client."
+    ::= { gwnRouterWirelessClientEntry 3 }
+
+-- 1.3.6.1.4.1.42397.1.2.1.3.1.4
+gwnRouterWirelessClientIPv4Address OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION "Client ipv4."
+    ::= { gwnRouterWirelessClientEntry 4 }
+
+-- 1.3.6.1.4.1.42397.1.2.1.3.1.5
+gwnRouterWirelessClientIPv6Address OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION "Client ipv6."
+    ::= { gwnRouterWirelessClientEntry 5 }
+
+-- 1.3.6.1.4.1.42397.1.2.1.3.1.6
+gwnRouterWirelessClientWlanBand OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION "Client band."
+    ::= { gwnRouterWirelessClientEntry 6 }
+
+-- 1.3.6.1.4.1.42397.1.2.1.3.1.7
+gwnRouterWirelessClientWlanESSID OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The name of the WLAN associated with the client."
+    ::= { gwnRouterWirelessClientEntry 7 }
+
+-- 1.3.6.1.4.1.42397.1.2.1.3.1.8
+gwnRouterWirelessClientRSSI OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION "Client RSSI."
+    ::= { gwnRouterWirelessClientEntry 8 }
+
+-- 1.3.6.1.4.1.42397.1.2.1.3.1.9
+gwnRouterWirelessClientAssoctime OBJECT-TYPE
+    SYNTAX TimeTicks
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION "Client assoctime."
+    ::= { gwnRouterWirelessClientEntry 9 }
+
+-- 1.3.6.1.4.1.42397.1.2.1.3.1.10
+gwnRouterWirelessClientManufacture OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION "Client manufacture."
+    ::= { gwnRouterWirelessClientEntry 10 }
+
+-- 1.3.6.1.4.1.42397.1.2.1.3.1.11
+gwnRouterWirelessClientHostname OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION "Client hostname."
+    ::= { gwnRouterWirelessClientEntry 11 }
+
+-- 1.3.6.1.4.1.42397.1.2.1.3.1.12
+gwnRouterWirelessClientOS OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION "Client OS."
+    ::= { gwnRouterWirelessClientEntry 12 }
+
+-- 1.3.6.1.4.1.42397.1.2.1.2.1.13
+gwnRouterWirelessClientRxPkts OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION "Client receive pkts"
+    ::= { gwnRouterWirelessClientEntry 13 }
+
+-- 1.3.6.1.4.1.42397.1.2.1.2.1.14
+gwnRouterWirelessClientRxBytes OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION "Client receive bytes"
+    ::= { gwnRouterWirelessClientEntry 14 }
+
+-- 1.3.6.1.4.1.42397.1.2.1.2.1.15
+gwnRouterWirelessClientTxPkts OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION "Client send packets"
+    ::= { gwnRouterWirelessClientEntry 15 }
+
+-- 1.3.6.1.4.1.42397.1.2.1.2.1.16
+gwnRouterWirelessClientTxBytes OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION "Client send bytes"
+    ::= { gwnRouterWirelessClientEntry 16 }
+
+-- 1.3.6.1.4.1.42397.1.2.2
+gwnRouterWired MODULE-IDENTITY
+    LAST-UPDATED "202308040001Z"
+    ORGANIZATION "Grandstream Networks, Inc."
+    CONTACT-INFO ""
+    DESCRIPTION
+    "Grandstream gwnRouterWired product OID registration mib."
+    ::= { gwnRouter 2 }
+
+-- 1.3.6.1.4.1.42397.1.2.2.1
+gwnRouterWiredClientTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF GwnRouterWiredClientEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION "Client Table."
+    ::= { gwnRouterWired 1 }
+
+-- 1.3.6.1.4.1.42397.1.2.2.1.1
+gwnRouterWiredClientEntry OBJECT-TYPE
+    SYNTAX GwnRouterWiredClientEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION "Describes each client."
+    INDEX { gwnRouterWiredClientIndex }
+    ::= { gwnRouterWiredClientTable 1 }
+
+GwnRouterWiredClientEntry ::= SEQUENCE {
+    gwnRouterWiredClientIndex
+        Integer32,
+    gwnRouterWiredClientMACAddress
+        DisplayString,
+    gwnRouterWiredClientIPv4Address
+        DisplayString,
+    gwnRouterWiredClientIPv6Address
+        DisplayString,
+    gwnRouterWiredClientConnectmode
+        DisplayString,
+    gwnRouterWiredClientAssoctime
+        TimeTicks,
+    gwnRouterWiredClientManufacture
+        DisplayString,
+    gwnRouterWiredClientHostname
+        DisplayString,
+    gwnRouterWiredClientOnlineStatus
+        DisplayString
+}
+
+-- 1.3.6.1.4.1.42397.1.2.2.1.1.1
+gwnRouterWiredClientIndex OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION "client id, Remains the same even
+                 if the name of the client changes"
+    ::= { gwnRouterWiredClientEntry 1 }
+
+-- 1.3.6.1.4.1.42397.1.2.2.1.1.2
+gwnRouterWiredClientMACAddress OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION "Client mac."
+    ::= { gwnRouterWiredClientEntry 2 }
+
+-- 1.3.6.1.4.1.42397.1.2.2.1.1.3
+gwnRouterWiredClientIPv4Address OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION "Client ipv4."
+    ::= { gwnRouterWiredClientEntry 3 }
+
+-- 1.3.6.1.4.1.42397.1.2.2.1.1.4
+gwnRouterWiredClientIPv6Address OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION "Client ipv6."
+    ::= { gwnRouterWiredClientEntry 4 }
+
+-- 1.3.6.1.4.1.42397.1.2.2.1.1.5
+gwnRouterWiredClientConnectmode OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION "Client connect mode."
+    ::= { gwnRouterWiredClientEntry 5 }
+
+-- 1.3.6.1.4.1.42397.1.2.2.1.1.6
+gwnRouterWiredClientAssoctime OBJECT-TYPE
+    SYNTAX TimeTicks
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION "Client assoctime."
+    ::= { gwnRouterWiredClientEntry 6 }
+
+-- 1.3.6.1.4.1.42397.1.2.2.1.1.7
+gwnRouterWiredClientManufacture OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION "Client manufacture."
+    ::= { gwnRouterWiredClientEntry 7 }
+
+-- 1.3.6.1.4.1.42397.1.2.2.1.1.8
+gwnRouterWiredClientHostname OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION "Client hostname."
+    ::= { gwnRouterWiredClientEntry 8 }
+
+
+-- 1.3.6.1.4.1.42397.1.2.2.1.1.9
+gwnRouterWiredClientOnlineStatus OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION "Client online status"
+    ::= { gwnRouterWiredClientEntry 9 }
+
+-- 1.3.6.1.4.1.42397.1.2.3
+gwnRouterWan MODULE-IDENTITY
+    LAST-UPDATED "202408200001Z"
+    ORGANIZATION "Grandstream Networks, Inc."
+    CONTACT-INFO ""
+    DESCRIPTION
+    "Grandstream gwnRouterWan product OID registration mib."
+    ::= { gwnRouter 3 }
+
+-- 1.3.6.1.4.1.42397.1.2.3.1
+gwnRouterWanTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF GwnRouterWanEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION "Wan Table."
+    ::= { gwnRouterWan 1 }
+
+-- 1.3.6.1.4.1.42397.1.2.3.1.1
+gwnRouterWanEntry OBJECT-TYPE
+    SYNTAX GwnRouterWanEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION "Describes each wan."
+    INDEX { gwnRouterWanIndex }
+    ::= { gwnRouterWanTable 1 }
+
+GwnRouterWanEntry ::= SEQUENCE {
+    gwnRouterWanIndex
+        Integer32,
+    gwnRouterWanName
+        DisplayString,
+    gwnRouterWanEnable
+        Integer32,
+    gwnRouterWanProto
+        DisplayString,
+    gwnRouterWanIp4Address
+        DisplayString,
+    gwnRouterWanStaticDnsEnable
+        Integer32,
+    gwnRouterWanFirstDns
+        DisplayString,
+    gwnRouterWanSecondDns
+        DisplayString,
+    gwnRouterWanIp6Enable
+        Integer32,
+    gwnRouterWanIp6Address
+        DisplayString,
+    gwnRouterWanPortId
+        DisplayString,
+    gwnRouterWanPortName
+        DisplayString,
+    gwnRouterWanPortType
+        DisplayString,
+    gwnRouterWanTrackIpEnable
+        Integer32,
+    gwnRouterWanTrackIp
+        DisplayString,
+    gwnRouterWanTxRate
+        Counter32,
+    gwnRouterWanRxRate
+        Counter32,
+    gwnRouterWanTxFlow
+        Counter32,
+    gwnRouterWanRxFlow
+        Counter32,
+    gwnRouterWanTotalFlow
+        Counter32,
+    gwnRouterWanTxPackets
+        Counter32,
+    gwnRouterWanRxPackets
+        Counter32,
+    gwnRouterWanIcmpLoss
+        DisplayString,
+    gwnRouterWanIcmpResponseTime
+        DisplayString
+}
+
+-- 1.3.6.1.4.1.42397.1.2.3.1.1.1
+gwnRouterWanIndex OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION "Wan id, Remains the same even
+                 if the name of the wan changes"
+    ::= { gwnRouterWanEntry 1 }
+
+-- 1.3.6.1.4.1.42397.1.2.3.1.1.2
+gwnRouterWanName OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION "Wan name"
+    ::= { gwnRouterWanEntry 2 }
+
+-- 1.3.6.1.4.1.42397.1.2.3.1.1.3
+gwnRouterWanEnable OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION "Wan enable"
+    ::= { gwnRouterWanEntry 3 }
+
+-- 1.3.6.1.4.1.42397.1.2.3.1.1.4
+gwnRouterWanProto OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION "Wan protocol"
+    ::= { gwnRouterWanEntry 4 }
+
+-- 1.3.6.1.4.1.42397.1.2.3.1.1.5
+gwnRouterWanIp4Address OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION "Wan ipv4 address"
+    ::= { gwnRouterWanEntry 5 }
+
+-- 1.3.6.1.4.1.42397.1.2.3.1.1.6
+gwnRouterWanStaticDnsEnable OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION "Wan static dns enable"
+    ::= { gwnRouterWanEntry 6 }
+
+-- 1.3.6.1.4.1.42397.1.2.3.1.1.7
+gwnRouterWanFirstDns OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION "Wan first dns"
+    ::= { gwnRouterWanEntry 7 }
+
+-- 1.3.6.1.4.1.42397.1.2.3.1.1.8
+gwnRouterWanSecondDns OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION "Wan second dns"
+    ::= { gwnRouterWanEntry 8 }
+
+-- 1.3.6.1.4.1.42397.1.2.3.1.1.9
+gwnRouterWanIp6Enable OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION "Wan ipv6 enable"
+    ::= { gwnRouterWanEntry 9 }
+
+-- 1.3.6.1.4.1.42397.1.2.3.1.1.10
+gwnRouterWanIp6Address OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION "Wan ipv6 address"
+    ::= { gwnRouterWanEntry 10 }
+
+-- 1.3.6.1.4.1.42397.1.2.3.1.1.11
+gwnRouterWanPortId OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION "Wan port id"
+    ::= { gwnRouterWanEntry 11 }
+
+-- 1.3.6.1.4.1.42397.1.2.3.1.1.12
+gwnRouterWanPortName OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION "Wan port name"
+    ::= { gwnRouterWanEntry 12 }
+
+-- 1.3.6.1.4.1.42397.1.2.3.1.1.13
+gwnRouterWanPortType OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION "Wan port type"
+    ::= { gwnRouterWanEntry 13 }
+
+-- 1.3.6.1.4.1.42397.1.2.3.1.1.14
+gwnRouterWanTrackIpEnable OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION "Wan track ip enable"
+    ::= { gwnRouterWanEntry 14 }
+
+-- 1.3.6.1.4.1.42397.1.2.3.1.1.15
+gwnRouterWanTrackIp OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION "Wan track ip"
+    ::= { gwnRouterWanEntry 15 }
+
+-- 1.3.6.1.4.1.42397.1.2.3.1.1.16
+gwnRouterWanTxRate OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION "Wan send rate,unit bps "
+    ::= { gwnRouterWanEntry 16 }
+
+-- 1.3.6.1.4.1.42397.1.2.3.1.1.17
+gwnRouterWanRxRate OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION "Wan receive rate,unit bps "
+    ::= { gwnRouterWanEntry 17 }
+
+-- 1.3.6.1.4.1.42397.1.2.3.1.1.18
+gwnRouterWanTxFlow OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION "Wan send bytes, unit byte "
+    ::= { gwnRouterWanEntry 18 }
+
+-- 1.3.6.1.4.1.42397.1.2.3.1.1.19
+gwnRouterWanRxFlow OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION "Wan receive bytes, unit byte "
+    ::= { gwnRouterWanEntry 19 }
+
+-- 1.3.6.1.4.1.42397.1.2.3.1.1.20
+gwnRouterWanTotalFlow OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION "Wan total bytes, unit byte"
+    ::= { gwnRouterWanEntry 20 }
+
+-- 1.3.6.1.4.1.42397.1.2.3.1.1.21
+gwnRouterWanTxPackets OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION "Wan send pkts "
+    ::= { gwnRouterWanEntry 21 }
+
+-- 1.3.6.1.4.1.42397.1.2.3.1.1.22
+gwnRouterWanRxPackets OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION "Wan receive pkts "
+    ::= { gwnRouterWanEntry 22 }
+
+-- 1.3.6.1.4.1.42397.1.2.3.1.1.23
+gwnRouterWanIcmpLoss OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION "Wan icmp loss percent"
+    ::= { gwnRouterWanEntry 23 }
+
+-- 1.3.6.1.4.1.42397.1.2.3.1.1.24
+gwnRouterWanIcmpResponseTime OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION "Wan icmp response"
+    ::= { gwnRouterWanEntry 24 }
+
+END

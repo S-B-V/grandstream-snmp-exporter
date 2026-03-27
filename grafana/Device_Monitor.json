@@ -1,0 +1,109 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "links": [],
+  "panels": [
+    {
+      "title": "Uptime",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "grandstream_host_resources_mib_hrsystemuptime{device_ip=\"$target\"}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "decimals": 0
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Value" },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dthms"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "none",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "title": "CPU Load (%)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 6, "y": 0 },
+      "targets": [
+        {
+          "expr": "grandstream_host_resources_mib_hrprocessorload{device_ip=\"$target\"}",
+          "legendFormat": "Core {{hrProcessorIndex}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "custom": { "drawStyle": "line", "lineInterpolation": "smooth" }
+        }
+      }
+    },
+    {
+      "title": "Storage & Memory Usage (Megabytes)",
+      "type": "bargauge",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 8 },
+      "targets": [
+        {
+          "expr": "grandstream_storage_used_megabytes{device_ip=\"$target\"}",
+          "legendFormat": "{{descr}} (Used)",
+          "refId": "A"
+        },
+        {
+          "expr": "grandstream_storage_total_megabytes{device_ip=\"$target\"}",
+          "legendFormat": "{{descr}} (Total)",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "mbytes",
+          "color": { "mode": "palette-classic" }
+        }
+      },
+      "options": {
+        "displayMode": "lcd",
+        "orientation": "horizontal"
+      }
+    }
+  ],
+  "schemaVersion": 38,
+  "templating": {
+    "list": [
+      {
+        "name": "target",
+        "type": "query",
+        "query": "label_values(grandstream_exporter_up, device_ip)",
+        "refresh": 1,
+        "datasource": { "type": "prometheus" }
+      }
+    ]
+  },
+  "title": "Grandstream Device Monitor",
+  "uid": "gs-snmp-monitor"
+}

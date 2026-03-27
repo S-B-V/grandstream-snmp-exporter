@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grandstream-snmp-exporter
+  namespace: grandstream-monitoring
+  labels:
+    app: grandstream-snmp-exporter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grandstream-snmp-exporter
+  template:
+    metadata:
+      labels:
+        app: grandstream-snmp-exporter
+    spec:
+      containers:
+      - name: exporter
+        image: ghcr.io/s-b-v/grandstream-snmp-exporter:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 9109
+          name: metrics
+        env:
+        - name: DEVICE_TYPE
+          value: "GCC"
+        - name: DEVICE_IP
+          value: "192.168.1.1"
+        - name: SNMP_VERSION
+          value: "2c"
+        - name: SNMP_COMMUNITY
+          valueFrom:
+            secretKeyRef:
+              name: grandstream-snmp-secret
+              key: SNMP_COMMUNITY
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 9109
+          initialDelaySeconds: 5
+          periodSeconds: 15
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 9109
+          initialDelaySeconds: 10
+          periodSeconds: 30
+        resources:
+          requests:
+            cpu: 20m
+            memory: 32Mi
+          limits:
+            cpu: 200m
+            memory: 128Mi

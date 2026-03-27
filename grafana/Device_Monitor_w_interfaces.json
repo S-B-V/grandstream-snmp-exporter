@@ -1,0 +1,89 @@
+{
+  "editable": true,
+  "panels": [
+    {
+      "title": "Uptime",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "grandstream_host_resources_mib_hrsystemuptime{device_ip=\"$target\"}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "decimals": 0
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Value" },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dthms"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "none",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "title": "CPU Usage",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 18, "x": 6, "y": 0 },
+      "targets": [{ "expr": "grandstream_host_resources_mib_hrprocessorload{device_ip=\"$target\"}", "legendFormat": "Core {{hrProcessorIndex}}" }],
+      "fieldConfig": { "defaults": { "unit": "percent", "min": 0, "max": 100 } }
+    },
+    {
+      "title": "Network Traffic (bps)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "targets": [
+        { "expr": "irate(grandstream_if_mib_ifinoctets{device_ip=\"$target\"}[5m]) * 8", "legendFormat": "In {{ifIndex}}", "refId": "A" },
+        { "expr": "irate(grandstream_if_mib_ifoutoctets{device_ip=\"$target\"}[5m]) * -8", "legendFormat": "Out {{ifIndex}}", "refId": "B" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "bps" } }
+    },
+    {
+      "title": "Packet Rate (pps)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "targets": [
+        { "expr": "irate(grandstream_if_mib_ifinucastpkts{device_ip=\"$target\"}[5m])", "legendFormat": "Unicast In {{ifIndex}}" },
+        { "expr": "irate(grandstream_if_mib_ifoutucastpkts{device_ip=\"$target\"}[5m])", "legendFormat": "Unicast Out {{ifIndex}}" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "pps" } }
+    },
+    {
+      "title": "Storage & Memory (MB)",
+      "type": "bargauge",
+      "gridPos": { "h": 6, "w": 24, "x": 0, "y": 16 },
+      "targets": [
+        { "expr": "grandstream_storage_used_megabytes{device_ip=\"$target\"}", "legendFormat": "{{descr}} Used" },
+        { "expr": "grandstream_storage_total_megabytes{device_ip=\"$target\"}", "legendFormat": "{{descr}} Total" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "mbytes" } }
+    }
+  ],
+  "templating": {
+    "list": [{
+      "name": "target", "type": "query", "refresh": 1,
+      "query": "label_values(grandstream_exporter_up, device_ip)",
+      "datasource": { "type": "prometheus" }
+    }]
+  },
+  "title": "Grandstream Device Monitor w. Interfaces"
+}

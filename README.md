@@ -2,26 +2,6 @@
 
 This exporter connects to a Grandstream device using SNMP v2c or v3 and exposes metrics in Prometheus text format on `/metrics`.
 
-## Reliability improvement: fresh SNMP client per scrape
-
-This version creates a new SNMP client for every Prometheus scrape.
-
-That change is intentional and fixes a class of recovery problems where a long-lived SNMP session can get stuck after:
-
-- a temporary network interruption
-- a device reboot
-- an SNMP timeout
-- stale SNMPv3 session state
-- a dead UDP socket that was not fully reset
-
-With the per-scrape approach, each collection starts from a clean client instance, connects, scrapes, and closes the connection again. If one scrape fails, the next scrape starts fresh instead of reusing a potentially broken session.
-
-Additional tuning included here:
-
-- `gosnmp` updated to `v1.43.2`
-- `MaxRepetitions` set to `10` for safer `BulkWalk` behaviour with picky devices
-- proper `client.Close()` usage on the active client
-
 ## Endpoints
 
 - `/metrics` - Prometheus metrics
@@ -89,6 +69,7 @@ docker run --rm -p 9109:9109 \
   -e SNMP_PRIV_PASSPHRASE='my-privacy-passphrase' \
   ghcr.io/s-b-v/grandstream-snmp-exporter:latest
 ```
+---
 
 ## Build locally
 
@@ -96,6 +77,18 @@ docker run --rm -p 9109:9109 \
 go mod tidy
 go build ./...
 ```
+
+---
+
+## Build (Podman)
+
+From repo root:
+
+```bash
+podman build --no-cache --platform linux/amd64 -t grandstream-snmp-exporter:latest -f dockerfile .
+
+```
+---
 
 ## Notes on behaviour
 

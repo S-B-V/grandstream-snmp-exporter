@@ -43,33 +43,156 @@ This exporter connects to a Grandstream device using SNMP v2c or v3 and exposes 
   - `AES-256`
 - `SNMP_PRIV_PASSPHRASE`
 
-## Example: SNMP v2c
+## Device type → MIB mapping (inside the container)
+
+⚠️ It seems that Grandstream devices are not responding to their MIBs... but I keept them, just in case they may work in future...
+
+MIBs are included under `/mibs` and the exporter loads:
+
+- `DEVICE_TYPE=AP`
+
+   - `GRANDSTREAM-GWN-ROOT-MIB.txt`
+   - `GRANDSTREAM-GWN-PRODUCTS-AP-MIB.txt`
+
+- `DEVICE_TYPE=GCC`
+
+   - `GS-GCC60XX-SNMP-MIB-V1.0.txt`
+
+- `DEVICE_TYPE=L2-LITE-SWITCH`
+
+   - `GRANDSTREAM-GWN-ROOT-MIB.txt`
+   - `GRANDSTREAM-GWN-PRODUCTS-L2-LITE-SWITCH-MIB.txt`
+
+- `DEVICE_TYPE=GENERIC`
+
+   - `GRANDSTREAM-GWN-ROOT-MIB.txt`
+   - `GRANDSTREAM-GWN-PRODUCTS-MIB.txt`
+
+- `DEVICE_TYPE=ROUTER`
+
+   - `GRANDSTREAM-GWN-ROOT-MIB.txt`
+   - `GRANDSTREAM-GWN-PRODUCTS-ROUTER-MIB.txt`
+
+- `DEVICE_TYPE=SWITCH`
+
+   - `GRANDSTREAM-GWN-ROOT-MIB.txt`
+   - `GRANDSTREAM-GWN-PRODUCTS-SWITCH-MIB.txt`
+
+---
+
+## Configuration (Environment Variables)
+
+Required:
+
+- `DEVICE_TYPE` = `GCC|AP|L2-LITE-SWITCH|SWITCH|ROUTER|GENERIC`
+- `DEVICE_IP` = device IP address
+- `SNMP_VERSION` = `2c` or `3`
+
+Optional:
+
+- `SNMP_PORT` = `161` (default)
+- `LISTEN` = `:9109` (default)
+- `MIB_DIR` = `/mibs` (default; container already sets this)
+
+### SNMP v2c
+
+Required:
+
+- `SNMP_COMMUNITY`
+
+### SNMP v3
+
+Required:
+
+- `SNMP_SECURITY_LEVEL` = `noAuthNoPriv|authNoPriv|authPriv`
+- `SNMP_USERNAME`
+
+Conditional:
+
+- If `authNoPriv` or `authPriv`:
+
+   - `SNMP_AUTH_PROTOCOL` = `MD5|SHA|SHA-224|SHA-256|SHA-384|SHA-512`
+   - `SNMP_AUTH_PASSPHRASE`
+
+- If `authPriv`:
+
+   - `SNMP_PRIV_PROTOCOL` = `DES|AES|AES-192|AES-256`
+   - `SNMP_PRIV_PASSPHRASE`
+
+---
+
+## Build (Podman)
+
+From repo root:
 
 ```bash
-docker run --rm -p 9109:9109 \
-  -e DEVICE_TYPE=grandstream \
+podman build --no-cache --platform linux/amd64 -t grandstream-snmp-exporter:latest -f dockerfile .
+```
+
+---
+
+## Run examples (Podman)
+
+### AP (SNMP v2c)
+
+```bash
+podman run --rm -p 9109:9109 \
+  -e DEVICE_TYPE=AP \
   -e DEVICE_IP=192.0.2.10 \
   -e SNMP_VERSION=2c \
   -e SNMP_COMMUNITY=public \
-  ghcr.io/s-b-v/grandstream-snmp-exporter:latest
+  grandstream-snmp-exporter:latest
 ```
 
-## Example: SNMP v3 authPriv
+### Router (SNMP v3 authPriv)
 
 ```bash
-docker run --rm -p 9109:9109 \
-  -e DEVICE_TYPE=grandstream \
-  -e DEVICE_IP=192.0.2.10 \
+podman run --rm -p 9109:9109 \
+  -e DEVICE_TYPE=ROUTER \
+  -e DEVICE_IP=192.0.2.11 \
   -e SNMP_VERSION=3 \
   -e SNMP_SECURITY_LEVEL=authPriv \
   -e SNMP_USERNAME=myuser \
   -e SNMP_AUTH_PROTOCOL=SHA-256 \
-  -e SNMP_AUTH_PASSPHRASE='my-auth-passphrase' \
+  -e SNMP_AUTH_PASSPHRASE='auth-pass' \
   -e SNMP_PRIV_PROTOCOL=AES \
-  -e SNMP_PRIV_PASSPHRASE='my-privacy-passphrase' \
-  ghcr.io/s-b-v/grandstream-snmp-exporter:latest
+  -e SNMP_PRIV_PASSPHRASE='priv-pass' \
+  grandstream-snmp-exporter:latest
 ```
+
+### Switch (SNMP v2c)
+
+```bash
+podman run --rm -p 9109:9109 \
+  -e DEVICE_TYPE=SWITCH \
+  -e DEVICE_IP=192.0.2.12 \
+  -e SNMP_VERSION=2c \
+  -e SNMP_COMMUNITY=public \
+  grandstream-snmp-exporter:latest
+```
+
+### GCC (SNMP v3 authNoPriv)
+
+```bash
+podman run --rm -p 9109:9109 \
+  -e DEVICE_TYPE=GCC \
+  -e DEVICE_IP=192.0.2.20 \
+  -e SNMP_VERSION=3 \
+  -e SNMP_SECURITY_LEVEL=authNoPriv \
+  -e SNMP_USERNAME=myuser \
+  -e SNMP_AUTH_PROTOCOL=SHA-256 \
+  -e SNMP_AUTH_PASSPHRASE='auth-pass' \
+  grandstream-snmp-exporter:latest
+```
+
+Check:
+
+- http://localhost:9109/healthz
+- http://localhost:9109/metrics
+
+
 ---
+
 
 ## Build locally
 
@@ -85,7 +208,7 @@ go build ./...
 From repo root:
 
 ```bash
-podman build --no-cache --platform linux/amd64 -t grandstream-snmp-exporter:latest -f dockerfile .
+podman build --no-cache --platform linux/amd64 -t grandstream-snmp-exporter:latest -f podmanfile .
 
 ```
 ---

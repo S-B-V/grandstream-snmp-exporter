@@ -153,7 +153,7 @@ podman run --rm -p 9109:9109 \
   -e SNMP_VERSION=3 \
   -e SNMP_SECURITY_LEVEL=authPriv \
   -e SNMP_USERNAME=myuser \
-  -e SNMP_AUTH_PROTOCOL=SHA-256 \
+  -e SNMP_AUTH_PROTOCOL=SHA \
   -e SNMP_AUTH_PASSPHRASE='auth-pass' \
   -e SNMP_PRIV_PROTOCOL=AES \
   -e SNMP_PRIV_PASSPHRASE='priv-pass' \
@@ -180,7 +180,7 @@ podman run --rm -p 9109:9109 \
   -e SNMP_VERSION=3 \
   -e SNMP_SECURITY_LEVEL=authNoPriv \
   -e SNMP_USERNAME=myuser \
-  -e SNMP_AUTH_PROTOCOL=SHA-256 \
+  -e SNMP_AUTH_PROTOCOL=SHA \
   -e SNMP_AUTH_PASSPHRASE='auth-pass' \
   grandstream-snmp-exporter:latest
 ```

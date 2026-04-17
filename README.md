@@ -141,7 +141,7 @@ podman run --rm -p 9109:9109 \
   -e DEVICE_IP=192.0.2.10 \
   -e SNMP_VERSION=2c \
   -e SNMP_COMMUNITY=public \
-  grandstream-snmp-exporter:latest
+  ghcr.io/s-b-v/grandstream-snmp-exporter:latest
 ```
 
 ### Router (SNMP v3 authPriv)
@@ -157,7 +157,7 @@ podman run --rm -p 9109:9109 \
   -e SNMP_AUTH_PASSPHRASE='auth-pass' \
   -e SNMP_PRIV_PROTOCOL=AES \
   -e SNMP_PRIV_PASSPHRASE='priv-pass' \
-  grandstream-snmp-exporter:latest
+  ghcr.io/s-b-v/grandstream-snmp-exporter:latest
 ```
 
 ### Switch (SNMP v2c)
@@ -168,7 +168,7 @@ podman run --rm -p 9109:9109 \
   -e DEVICE_IP=192.0.2.12 \
   -e SNMP_VERSION=2c \
   -e SNMP_COMMUNITY=public \
-  grandstream-snmp-exporter:latest
+  ghcr.io/s-b-v/grandstream-snmp-exporter:latest
 ```
 
 ### GCC (SNMP v3 authNoPriv)
@@ -182,7 +182,7 @@ podman run --rm -p 9109:9109 \
   -e SNMP_USERNAME=myuser \
   -e SNMP_AUTH_PROTOCOL=SHA \
   -e SNMP_AUTH_PASSPHRASE='auth-pass' \
-  grandstream-snmp-exporter:latest
+  ghcr.io/s-b-v/grandstream-snmp-exporter:latest
 ```
 
 Check:

@@ -1,0 +1,52 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: grandstream-snmp-once
+spec:
+  schedule: "*/5 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: snmp-scraper
+              image: grandstream-snmp-exporter:latest
+              imagePullPolicy: IfNotPresent
+              env:
+                - name: MODE
+                  value: "once"
+                - name: DEVICE_TYPE
+                  value: "GENERIC"
+                - name: DEVICE_IP
+                  value: "192.0.2.10"
+                - name: SNMP_VERSION
+                  value: "3"
+                - name: SNMP_SECURITY_LEVEL
+                  value: "authPriv"
+                - name: SNMP_USERNAME
+                  valueFrom:
+                    secretKeyRef:
+                      name: snmpv3-secret
+                      key: username
+                - name: SNMP_AUTH_PROTOCOL
+                  value: "SHA-256"
+                - name: SNMP_AUTH_PASSPHRASE
+                  valueFrom:
+                    secretKeyRef:
+                      name: snmpv3-secret
+                      key: authPass
+                - name: SNMP_PRIV_PROTOCOL
+                  value: "AES"
+                - name: SNMP_PRIV_PASSPHRASE
+                  valueFrom:
+                    secretKeyRef:
+                      name: snmpv3-secret
+                      key: privPass
+                - name: SNMP_WALK_OIDS
+                  value: "1.3.6.1.2.1.1,1.3.6.1.2.1.2,1.3.6.1.2.1.31.1"
+                - name: PUSHGATEWAY_URL
+                  value: "http://pushgateway.monitoring.svc:9091"
+                - name: PUSHGATEWAY_JOB
+                  value: "grandstream_snmp"
+

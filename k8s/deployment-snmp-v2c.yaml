@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: exporter
-        image: ghcr.io/s-b-v/grandstream-snmp-exporter:latest
+        image: grandstream-snmp-exporter:latest
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 9109

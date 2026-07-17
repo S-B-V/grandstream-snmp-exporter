@@ -1,82 +1,49 @@
-# Grandstream SNMP Exporter (v2c/v3) -> Prometheus
+# Grandstream SNMP Exporter (v2c/v3) → Prometheus
 
 This exporter connects to a Grandstream device using SNMP v2c or v3 and exposes metrics in Prometheus text format on `/metrics`.
 
-## Endpoints
+It collects a curated set of standard HOST-RESOURCES-MIB, IF-MIB and SNMPv2-MIB objects. For `DEVICE_TYPE=AP`, it also collects the working Grandstream AP enterprise subtree for device identity, radios and connected wireless clients.
 
-- `/metrics` - Prometheus metrics
-- `/healthz` - simple HTTP health check
+> Strings are exported as `*_info` metrics with `value="..."` label and sample value `1`.
 
-## Environment variables
+---
 
-### Common
+## Features
 
-- `DEVICE_TYPE` - logical device type label
-- `DEVICE_IP` - IP address or hostname of the target device
-- `SNMP_VERSION` - `2c` or `3`
-- `SNMP_PORT` - optional, default `161`
-- `LISTEN` - optional HTTP listen address, default `:9109`
+- SNMP v2c and v3 (noAuthNoPriv, authNoPriv, authPriv)
+- Device type specific:
 
-### SNMP v2c
+   - AP radio configuration, traffic, errors and drops
+   - AP connected-client count, identity, signal and association duration
 
-- `SNMP_COMMUNITY`
+- Operationally useful standard metrics:
 
-### SNMP v3
+   - normalized CPU labels (`core="0"`, `core="1"`, ...)
+   - readable interface names, state and reported speed
+   - 64-bit interface traffic counters
+   - storage and physical-memory utilization ratios
 
-- `SNMP_SECURITY_LEVEL` - one of:
-  - `noAuthNoPriv`
-  - `authNoPriv`
-  - `authPriv`
-- `SNMP_USERNAME`
-- `SNMP_AUTH_PROTOCOL` - optional depending on security level:
-  - `MD5`
-  - `SHA`
-  - `SHA-224`
-  - `SHA-256`
-  - `SHA-384`
-  - `SHA-512`
-- `SNMP_AUTH_PASSPHRASE`
-- `SNMP_PRIV_PROTOCOL` - optional depending on security level:
-  - `DES`
-  - `AES`
-  - `AES-192`
-  - `AES-256`
-- `SNMP_PRIV_PASSPHRASE`
+- Prometheus endpoint:
 
-## Device type → MIB mapping (inside the container)
+   - `GET /metrics`
+   - `GET /healthz`
 
-⚠️ It seems that Grandstream devices are not responding to their MIBs... but I keept them, just in case they may work in future...
+- Container-ready (Podman/Kubernetes)
 
-MIBs are included under `/mibs` and the exporter loads:
+- Two importable Grafana dashboards:
 
-- `DEVICE_TYPE=AP`
+   - `Grafana_Dashboard.json`: system, storage, interfaces and AP wireless
+   - `Grafana_Dashboard_no_interfaces.json`: compact system and AP wireless view
 
-   - `GRANDSTREAM-GWN-ROOT-MIB.txt`
-   - `GRANDSTREAM-GWN-PRODUCTS-AP-MIB.txt`
+---
 
-- `DEVICE_TYPE=GCC`
+## Device-specific data
 
-   - `GS-GCC60XX-SNMP-MIB-V1.0.txt`
+The exporter always collects the supported standard MIB objects. `DEVICE_TYPE=AP` additionally walks `1.3.6.1.4.1.42397.1.1`, which has been verified on a GWN7672.
 
-- `DEVICE_TYPE=L2-LITE-SWITCH`
+The GCC60xx vendor subtree `1.3.6.1.4.1.12581.2` may return no objects on current GCC firmware. GCC monitoring therefore uses its extensive standard HOST-RESOURCES-MIB and IF-MIB data.
 
-   - `GRANDSTREAM-GWN-ROOT-MIB.txt`
-   - `GRANDSTREAM-GWN-PRODUCTS-L2-LITE-SWITCH-MIB.txt`
-
-- `DEVICE_TYPE=GENERIC`
-
-   - `GRANDSTREAM-GWN-ROOT-MIB.txt`
-   - `GRANDSTREAM-GWN-PRODUCTS-MIB.txt`
-
-- `DEVICE_TYPE=ROUTER`
-
-   - `GRANDSTREAM-GWN-ROOT-MIB.txt`
-   - `GRANDSTREAM-GWN-PRODUCTS-ROUTER-MIB.txt`
-
-- `DEVICE_TYPE=SWITCH`
-
-   - `GRANDSTREAM-GWN-ROOT-MIB.txt`
-   - `GRANDSTREAM-GWN-PRODUCTS-SWITCH-MIB.txt`
+The repository includes the vendor MIB files as references, but metric names and table handling are implemented directly in the collector and do not require runtime MIB parsing.
 
 ---
 
@@ -92,7 +59,6 @@ Optional:
 
 - `SNMP_PORT` = `161` (default)
 - `LISTEN` = `:9109` (default)
-- `MIB_DIR` = `/mibs` (default; container already sets this)
 
 ### SNMP v2c
 
@@ -126,7 +92,7 @@ Conditional:
 From repo root:
 
 ```bash
-podman build --no-cache --platform linux/amd64 -t grandstream-snmp-exporter:latest -f dockerfile .
+podman build --no-cache --platform linux/amd64 -t grandstream-snmp-exporter:latest -f Containerfile_Podman .
 ```
 
 ---
@@ -141,7 +107,7 @@ podman run --rm -p 9109:9109 \
   -e DEVICE_IP=192.0.2.10 \
   -e SNMP_VERSION=2c \
   -e SNMP_COMMUNITY=public \
-  ghcr.io/s-b-v/grandstream-snmp-exporter:latest
+  grandstream-snmp-exporter:latest
 ```
 
 ### Router (SNMP v3 authPriv)
@@ -153,11 +119,11 @@ podman run --rm -p 9109:9109 \
   -e SNMP_VERSION=3 \
   -e SNMP_SECURITY_LEVEL=authPriv \
   -e SNMP_USERNAME=myuser \
-  -e SNMP_AUTH_PROTOCOL=SHA \
+  -e SNMP_AUTH_PROTOCOL=SHA-256 \
   -e SNMP_AUTH_PASSPHRASE='auth-pass' \
   -e SNMP_PRIV_PROTOCOL=AES \
   -e SNMP_PRIV_PASSPHRASE='priv-pass' \
-  ghcr.io/s-b-v/grandstream-snmp-exporter:latest
+  grandstream-snmp-exporter:latest
 ```
 
 ### Switch (SNMP v2c)
@@ -168,7 +134,7 @@ podman run --rm -p 9109:9109 \
   -e DEVICE_IP=192.0.2.12 \
   -e SNMP_VERSION=2c \
   -e SNMP_COMMUNITY=public \
-  ghcr.io/s-b-v/grandstream-snmp-exporter:latest
+  grandstream-snmp-exporter:latest
 ```
 
 ### GCC (SNMP v3 authNoPriv)
@@ -180,9 +146,9 @@ podman run --rm -p 9109:9109 \
   -e SNMP_VERSION=3 \
   -e SNMP_SECURITY_LEVEL=authNoPriv \
   -e SNMP_USERNAME=myuser \
-  -e SNMP_AUTH_PROTOCOL=SHA \
+  -e SNMP_AUTH_PROTOCOL=SHA-256 \
   -e SNMP_AUTH_PASSPHRASE='auth-pass' \
-  ghcr.io/s-b-v/grandstream-snmp-exporter:latest
+  grandstream-snmp-exporter:latest
 ```
 
 Check:
@@ -190,48 +156,142 @@ Check:
 - http://localhost:9109/healthz
 - http://localhost:9109/metrics
 
+---
+
+## Kubernetes (Prometheus Operator)
+
+If you use the Prometheus Operator, the recommended integration is:
+
+- Deployment + Service
+- ServiceMonitor in the same namespace (or label-selected by Prometheus)
+
+### ServiceMonitor (example)
+
+```yaml
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: grandstream-snmp-exporter
+  labels:
+    release: prometheus
+spec:
+  selector:
+    matchLabels:
+      app: grandstream-snmp-exporter
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 30s
+```
+
+> Adjust `metadata.labels.release` to match your Prometheus Helm release label if required.
 
 ---
 
+## Kubernetes (Deployment + Service example)
 
-## Build locally
+### Secret example (v2c)
 
-```bash
-go mod tidy
-go build ./...
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: snmp-secret
+type: Opaque
+stringData:
+  community: public
+```
+
+### Deployment + Service
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grandstream-snmp-exporter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grandstream-snmp-exporter
+  template:
+    metadata:
+      labels:
+        app: grandstream-snmp-exporter
+    spec:
+      containers:
+        - name: exporter
+          image: grandstream-snmp-exporter:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 9109
+          env:
+            - name: LISTEN
+              value: ":9109"
+            - name: DEVICE_TYPE
+              value: "SWITCH"
+            - name: DEVICE_IP
+              value: "192.0.2.12"
+            - name: SNMP_VERSION
+              value: "2c"
+            - name: SNMP_COMMUNITY
+              valueFrom:
+                secretKeyRef:
+                  name: snmp-secret
+                  key: community
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: grandstream-snmp-exporter
+  labels:
+    app: grandstream-snmp-exporter
+spec:
+  selector:
+    app: grandstream-snmp-exporter
+  ports:
+    - name: http
+      port: 9109
+      targetPort: 9109
 ```
 
 ---
 
-## Build (Podman)
+## Kubernetes CronJob pattern (optional)
 
-From repo root:
+Prometheus generally expects exporters to be long-running and scraped.
+If you _must_ run as a CronJob, consider using a Pushgateway. You can extend the app to support `MODE=once` + `PUSHGATEWAY_URL`.
+(If you want, I can add a ready-to-use Pushgateway mode.)
 
-```bash
-podman build --no-cache --platform linux/amd64 -t grandstream-snmp-exporter:latest -f podmanfile .
-
-```
 ---
 
-## Notes on behaviour
+## Makefile
 
-- `grandstream_exporter_up{device_ip="..."}` is `1` when the exporter could create a client and connect successfully during the current scrape.
-- If a scrape fails, the metric becomes `0` for that scrape.
-- The next scrape retries with a completely new SNMP client.
-- This design is especially useful for SNMPv3, where stale session state can otherwise cause repeated failures after interruptions.
+A Makefile is included for convenience:
 
-## Files changed for the reliability fix
+- `make build` (local binary)
+- `make image` (podman build)
+- `make run-ap` (example run)
+- `make k8s-servicemonitor` (prints ServiceMonitor YAML)
 
-- `cmd/exporter/main.go`
-- `internal/exporter/collector.go`
-- `internal/snmp/snmp.go`
-- `go.mod`
+---
 
-## Manual replacement
+## Notes / Caveats
 
-Replace the corresponding files in your repository with the versions provided here, then run:
+- Scrape output size depends on the number of storage entries, interfaces and AP clients reported by the device.
+- AP client identity fields are metric labels. On large wireless deployments, consider disabling or removing per-client metrics to limit Prometheus cardinality.
+- Interface counters use 64-bit IF-MIB objects when available. Some virtual interfaces do not report a usable link speed, so interface-utilization calculations omit them.
+- Strings are exported as `*_info` metrics (`value="..."`) with sample `1`. If you need to avoid high-cardinality string labels, change the exporter to hash/truncate values.
 
-```bash
-go mod tidy
-go build ./...
-```
+---
+
+## Troubleshooting
+
+### No metrics / exporter_up = 0
+
+- Check SNMP reachability from the container/pod (network policies, firewall).
+- Confirm correct SNMP version + credentials.
+- Confirm `DEVICE_TYPE` matches the device you’re scraping.
+- Check whether the device exposes HOST-RESOURCES-MIB and IF-MIB.
+- For AP wireless metrics, confirm the device responds under `1.3.6.1.4.1.42397.1.1` and uses `DEVICE_TYPE=AP`.

@@ -351,21 +351,23 @@ func (c *Collector) collectAP(ch chan<- prometheus.Metric) {
 		client := clients[key]
 		value, _ := pduToFloat64(pdu)
 		switch column {
-		case "1":
-			client.mac = pduToString(pdu)
+		// Grandstream's client entry has a numeric row index in column 1.
+		// The actual client fields start at column 2 (verified on GWN7672).
 		case "2":
-			client.ip = pduToString(pdu)
+			client.mac = pduToString(pdu)
 		case "3":
-			client.wlanMac = pduToString(pdu)
+			client.ip = pduToString(pdu)
 		case "4":
-			client.ssid = pduToString(pdu)
+			client.wlanMac = pduToString(pdu)
 		case "5":
-			client.signal = value
+			client.ssid = pduToString(pdu)
 		case "6":
+			client.signal = value
+		case "7":
 			client.assocSeconds = value
-		case "8":
-			client.hostname = pduToString(pdu)
 		case "9":
+			client.hostname = pduToString(pdu)
+		case "10":
 			client.os = pduToString(pdu)
 		}
 		return nil

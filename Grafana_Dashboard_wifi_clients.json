@@ -1,14 +1,4 @@
 {
-  "__inputs": [
-    {
-      "name": "DS_PROMETHEUS",
-      "label": "Prometheus",
-      "description": "",
-      "type": "datasource",
-      "pluginId": "prometheus",
-      "pluginName": "Prometheus"
-    }
-  ],
   "__requires": [
     {
       "type": "datasource",
@@ -53,10 +43,7 @@
         "name": "ap",
         "label": "Access point",
         "type": "query",
-        "datasource": {
-          "type": "prometheus",
-          "uid": "${DS_PROMETHEUS}"
-        },
+        "datasource": null,
         "definition": "label_values(grandstream_ap_client_info, device_ip)",
         "query": {
           "query": "label_values(grandstream_ap_client_info, device_ip)",
@@ -76,10 +63,7 @@
         "name": "ssid",
         "label": "SSID",
         "type": "query",
-        "datasource": {
-          "type": "prometheus",
-          "uid": "${DS_PROMETHEUS}"
-        },
+        "datasource": null,
         "definition": "label_values(grandstream_ap_client_info, ssid)",
         "query": {
           "query": "label_values(grandstream_ap_client_info, ssid)",
@@ -99,10 +83,7 @@
         "name": "client",
         "label": "Client MAC",
         "type": "query",
-        "datasource": {
-          "type": "prometheus",
-          "uid": "${DS_PROMETHEUS}"
-        },
+        "datasource": null,
         "definition": "label_values(grandstream_ap_client_info, client_mac)",
         "query": {
           "query": "label_values(grandstream_ap_client_info, client_mac)",
@@ -131,10 +112,7 @@
         "w": 8,
         "h": 4
       },
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
-      },
+      "datasource": null,
       "targets": [
         {
           "refId": "A",
@@ -190,10 +168,7 @@
         "w": 8,
         "h": 4
       },
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
-      },
+      "datasource": null,
       "targets": [
         {
           "refId": "A",
@@ -248,10 +223,7 @@
         "w": 8,
         "h": 4
       },
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
-      },
+      "datasource": null,
       "targets": [
         {
           "refId": "A",
@@ -307,10 +279,7 @@
         "w": 24,
         "h": 12
       },
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
-      },
+      "datasource": null,
       "targets": [
         {
           "refId": "A",
@@ -347,7 +316,7 @@
         },
         "sortBy": [
           {
-            "displayName": "Hostname",
+            "displayName": "IP",
             "desc": false
           }
         ]
@@ -364,16 +333,35 @@
               "instance": true,
               "device_type": true
             },
-            "indexByName": {},
+            "indexByName": {
+              "client_ip": 0,
+              "hostname": 1,
+              "device_ip": 2,
+              "ssid": 3,
+              "Value": 4,
+              "client_mac": 5,
+              "os": 6,
+              "wlan_mac": 7,
+              "service": 8,
+              "pod": 9,
+              "namespace": 10,
+              "container": 11,
+              "endpoint": 12
+            },
             "renameByName": {
               "hostname": "Hostname",
-              "client_ip": "IP address",
-              "client_mac": "MAC address",
+              "client_ip": "IP",
+              "client_mac": "MAC",
               "device_ip": "Access point",
               "ssid": "SSID",
               "wlan_mac": "BSSID",
               "os": "OS",
-              "Value": "Connected"
+              "Value": "Connected",
+              "service": "service",
+              "pod": "pod",
+              "namespace": "namespace",
+              "container": "container",
+              "endpoint": "endpoint"
             }
           }
         }
@@ -389,10 +377,7 @@
         "w": 12,
         "h": 8
       },
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
-      },
+      "datasource": null,
       "targets": [
         {
           "refId": "A",
@@ -444,10 +429,7 @@
         "w": 12,
         "h": 8
       },
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
-      },
+      "datasource": null,
       "targets": [
         {
           "refId": "A",
@@ -499,10 +481,7 @@
         "w": 24,
         "h": 9
       },
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
-      },
+      "datasource": null,
       "targets": [
         {
           "refId": "A",
@@ -555,10 +534,7 @@
         "w": 12,
         "h": 9
       },
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
-      },
+      "datasource": null,
       "targets": [
         {
           "refId": "A",
@@ -610,10 +586,7 @@
         "w": 12,
         "h": 9
       },
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
-      },
+      "datasource": null,
       "targets": [
         {
           "refId": "A",
@@ -664,10 +637,7 @@
         "w": 24,
         "h": 9
       },
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
-      },
+      "datasource": null,
       "targets": [
         {
           "refId": "A",

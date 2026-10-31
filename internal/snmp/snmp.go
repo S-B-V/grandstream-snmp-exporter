@@ -32,12 +32,12 @@ type Config struct {
 	Community string // v2c
 
 	// v3
-	SecLevel   V3SecLevel
-	Username   string
-	AuthProto  string
-	AuthPass   string
-	PrivProto  string
-	PrivPass   string
+	SecLevel  V3SecLevel
+	Username  string
+	AuthProto string
+	AuthPass  string
+	PrivProto string
+	PrivPass  string
 }
 
 func New(cfg Config) (*gosnmp.GoSNMP, error) {
@@ -47,7 +47,7 @@ func New(cfg Config) (*gosnmp.GoSNMP, error) {
 		Timeout: cfg.Timeout,
 		Retries: cfg.Retries,
 		// Some devices are picky; keep defaults safe:
-		MaxOids:  gosnmp.MaxOids,
+		MaxOids:   gosnmp.MaxOids,
 		Transport: "udp",
 		// TlsConfig: &tls.Config{InsecureSkipVerify: true},
 	}

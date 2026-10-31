@@ -20,28 +20,32 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          persist-credentials: false
+    permissions:
+      contents: write
 
-      - uses: actions/setup-go@v7
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: true
+
+      - name: Set up Go
+        uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
           cache: true
 
-      - name: Verify Go formatting
+      - name: Automatically format Go code
         shell: bash
         run: |
-          unformatted=$(find . -name '*.go' -not -path './vendor/*' -exec gofmt -l {} +)
+          find . -type f -name '*.go' \
+            -not -path './vendor/*' \
+            -exec gofmt -w {} +
 
-          if [ -n "$unformatted" ]; then
-            echo "::error::The following Go files are not formatted:"
-            echo "$unformatted"
-            exit 1
-          fi
+          git diff --check
 
       - name: Check module files
+        shell: bash
         run: |
           go mod tidy
           git diff --exit-code -- go.mod go.sum
@@ -57,3 +61,17 @@ jobs:
 
       - name: Check container build
         run: docker build -f dockerfile -t grandstream-snmp-exporter:ci .
+
+      - name: Commit formatting changes
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        shell: bash
+        run: |
+          if [ -n "$(git status --porcelain -- '*.go')" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email \
+              "41898282+github-actions[bot]@users.noreply.github.com"
+
+            git add -- '*.go'
+            git commit -m "style: auto-format Go code"
+            git push
+          fi

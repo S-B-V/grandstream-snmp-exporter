@@ -42,13 +42,13 @@ type Config struct {
 
 func New(cfg Config) (*gosnmp.GoSNMP, error) {
 	s := &gosnmp.GoSNMP{
-    Target:         cfg.Target,
-    Port:           cfg.Port,
-    Timeout:        cfg.Timeout,
-    Retries:        cfg.Retries,
-    MaxOids:        gosnmp.MaxOids,
-    MaxRepetitions: 5,
-    Transport:      "udp",
+		Target:         cfg.Target,
+		Port:           cfg.Port,
+		Timeout:        cfg.Timeout,
+		Retries:        cfg.Retries,
+		MaxOids:        gosnmp.MaxOids,
+		MaxRepetitions: 5,
+		Transport:      "udp",
 	}
 
 	switch cfg.Version {

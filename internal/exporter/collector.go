@@ -6,6 +6,7 @@ import (
 	"log"
 	"regexp"
 	"strings"
+	"sync/atomic"
 	"unicode/utf8"
 
 	"github.com/gosnmp/gosnmp"
@@ -15,10 +16,14 @@ import (
 var promNameRe = regexp.MustCompile(`[^a-zA-Z0-9_]`)
 
 type Collector struct {
-	SNMP       *gosnmp.GoSNMP
-	DeviceType string
-	DeviceIP   string
+	SNMP         *gosnmp.GoSNMP
+	DeviceType   string
+	DeviceIP     string
+	clientPollOK atomic.Bool
 }
+
+// ClientPollSucceeded reports whether the latest AP client-table walk completed.
+func (c *Collector) ClientPollSucceeded() bool { return c.clientPollOK.Load() }
 
 type symbolHint struct {
 	Module      string
@@ -141,6 +146,7 @@ func (c *Collector) Describe(ch chan<- *prometheus.Desc) {
 }
 
 func (c *Collector) Collect(ch chan<- prometheus.Metric) {
+	c.clientPollOK.Store(false)
 	if err := c.SNMP.Connect(); err != nil {
 		ch <- prometheus.MustNewConstMetric(prometheus.NewDesc("grandstream_exporter_up", "", []string{"device_ip"}, nil), prometheus.GaugeValue, 0, c.DeviceIP)
 		return
@@ -339,44 +345,54 @@ func (c *Collector) collectAP(ch chan<- prometheus.Metric) {
 	}
 	clients := map[string]*clientData{}
 	const clientBase = ".1.3.6.1.4.1.42397.1.1.3.3.1"
-	err := c.SNMP.BulkWalk(clientBase, func(pdu gosnmp.SnmpPDU) error {
-		rest := strings.TrimPrefix(pdu.Name, clientBase+".")
-		parts := strings.SplitN(rest, ".", 2)
-		if len(parts) != 2 {
+	// Poll only the fields used by Grafana. Walking all 18 columns is very slow
+	// on GWN7672 (measured ~59s). Missing or failing columns invalidate the poll.
+	for _, col := range []string{"2", "3", "4", "5", "6", "7", "9", "10"} {
+		err := c.SNMP.BulkWalk(clientBase+"."+col, func(pdu gosnmp.SnmpPDU) error {
+			rest := strings.TrimPrefix(pdu.Name, clientBase+".")
+			parts := strings.SplitN(rest, ".", 2)
+			if len(parts) != 2 {
+				return nil
+			}
+			column, key := parts[0], parts[1]
+			if _, exists := clients[key]; !exists {
+				clients[key] = &clientData{}
+			}
+			client := clients[key]
+			value, _ := pduToFloat64(pdu)
+			switch column {
+			case "2":
+				client.mac = pduToString(pdu)
+			case "3":
+				client.ip = pduToString(pdu)
+			case "4":
+				client.wlanMac = pduToString(pdu)
+			case "5":
+				client.ssid = pduToString(pdu)
+			case "6":
+				client.signal = value
+			case "7":
+				client.assocSeconds = value
+			case "9":
+				client.hostname = pduToString(pdu)
+			case "10":
+				client.os = pduToString(pdu)
+			}
 			return nil
+		})
+		if err != nil {
+			log.Printf("Grandstream AP %s: client SNMP column %s walk failed: %v", c.DeviceIP, col, err)
+			return
 		}
-		column, key := parts[0], parts[1]
-		if _, exists := clients[key]; !exists {
-			clients[key] = &clientData{}
-		}
-		client := clients[key]
-		value, _ := pduToFloat64(pdu)
-		switch column {
-		// Grandstream's client entry has a numeric row index in column 1.
-		// The actual client fields start at column 2 (verified on GWN7672).
-		case "2":
-			client.mac = pduToString(pdu)
-		case "3":
-			client.ip = pduToString(pdu)
-		case "4":
-			client.wlanMac = pduToString(pdu)
-		case "5":
-			client.ssid = pduToString(pdu)
-		case "6":
-			client.signal = value
-		case "7":
-			client.assocSeconds = value
-		case "9":
-			client.hostname = pduToString(pdu)
-		case "10":
-			client.os = pduToString(pdu)
-		}
-		return nil
-	})
-	if err != nil {
-		log.Printf("Grandstream AP %s: client SNMP walk failed: %v", c.DeviceIP, err)
-		return
 	}
+	// A successful table fetch with no entries is a legitimate zero-client result.
+	for _, client := range clients {
+		if client.mac == "" {
+			log.Printf("Grandstream AP %s: incomplete SNMP client table (missing MAC)", c.DeviceIP)
+			return
+		}
+	}
+	c.clientPollOK.Store(true)
 	baseLabels := []string{"device_ip", "device_type"}
 	baseValues := []string{c.DeviceIP, c.DeviceType}
 	ch <- prometheus.MustNewConstMetric(prometheus.NewDesc("grandstream_ap_clients", "Currently connected wireless clients", baseLabels, nil), prometheus.GaugeValue, float64(len(clients)), baseValues...)

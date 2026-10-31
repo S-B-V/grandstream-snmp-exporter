@@ -34,15 +34,7 @@ func main() {
 		}
 		port = uint16(pi)
 	}
-
-	cfg := snmp.Config{
-		Target:  deviceIP,
-		Port:    port,
-		Timeout: 8 * time.Second,
-		Retries: 1,
-		Version: snmp.Version(snmpVer),
-	}
-
+	cfg := snmp.Config{Target: deviceIP, Port: port, Timeout: 8 * time.Second, Retries: 1, Version: snmp.Version(snmpVer)}
 	switch snmpVer {
 	case "2c":
 		cfg.Community = mustEnv("SNMP_COMMUNITY")
@@ -56,31 +48,41 @@ func main() {
 	default:
 		log.Fatalf("unsupported SNMP_VERSION %q, use 2c or 3", snmpVer)
 	}
-
 	client, err := snmp.New(cfg)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	reg := prometheus.NewRegistry()
-	reg.MustRegister(&exporter.Collector{
-		SNMP:       client,
-		DeviceType: deviceType,
-		DeviceIP:   deviceIP,
-	})
+	interval := 90 * time.Second
+	if val := os.Getenv("SNMP_POLL_INTERVAL"); val != "" {
+		interval, err = time.ParseDuration(val)
+		if err != nil || interval < time.Second {
+			log.Fatalf("invalid SNMP_POLL_INTERVAL %q", val)
+		}
+	}
+
+	collector := &exporter.Collector{SNMP: client, DeviceType: deviceType, DeviceIP: deviceIP}
+	source := prometheus.NewRegistry()
+	source.MustRegister(collector)
+	cached := &exporter.CachedGatherer{}
+	pollMetrics, status := exporter.NewPollMetrics(deviceIP)
+	var check func() bool
+	if deviceType == "AP" || deviceType == "ap" {
+		check = collector.ClientPollSucceeded
+	}
+	exporter.RunPolling(source, cached, interval, check, deviceIP, pollMetrics)
+	combined := prometheus.Gatherers{cached, status}
 
 	mux := http.NewServeMux()
-	mux.Handle("/metrics", promhttp.HandlerFor(reg, promhttp.HandlerOpts{}))
+	mux.Handle("/metrics", promhttp.HandlerFor(combined, promhttp.HandlerOpts{}))
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte("ok\n"))
 	})
-
 	listen := os.Getenv("LISTEN")
 	if listen == "" {
 		listen = ":9109"
 	}
-
-	log.Printf("listening on %s", listen)
+	log.Printf("listening on %s (background polling every %s)", listen, interval)
 	log.Fatal(http.ListenAndServe(listen, mux))
 }

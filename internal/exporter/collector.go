@@ -3,6 +3,7 @@ package exporter
 import (
 	"encoding/hex"
 	"fmt"
+	"log"
 	"regexp"
 	"strings"
 	"unicode/utf8"
@@ -338,7 +339,7 @@ func (c *Collector) collectAP(ch chan<- prometheus.Metric) {
 	}
 	clients := map[string]*clientData{}
 	const clientBase = ".1.3.6.1.4.1.42397.1.1.3.3.1"
-	_ = c.SNMP.BulkWalk(clientBase, func(pdu gosnmp.SnmpPDU) error {
+	err := c.SNMP.BulkWalk(clientBase, func(pdu gosnmp.SnmpPDU) error {
 		rest := strings.TrimPrefix(pdu.Name, clientBase+".")
 		parts := strings.SplitN(rest, ".", 2)
 		if len(parts) != 2 {
@@ -372,6 +373,10 @@ func (c *Collector) collectAP(ch chan<- prometheus.Metric) {
 		}
 		return nil
 	})
+	if err != nil {
+		log.Printf("Grandstream AP %s: client SNMP walk failed: %v", c.DeviceIP, err)
+		return
+	}
 	baseLabels := []string{"device_ip", "device_type"}
 	baseValues := []string{c.DeviceIP, c.DeviceType}
 	ch <- prometheus.MustNewConstMetric(prometheus.NewDesc("grandstream_ap_clients", "Currently connected wireless clients", baseLabels, nil), prometheus.GaugeValue, float64(len(clients)), baseValues...)

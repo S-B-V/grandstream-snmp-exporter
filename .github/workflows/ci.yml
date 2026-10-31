@@ -1,39 +1,59 @@
+
 name: CI
+
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
   workflow_dispatch:
+
 permissions:
   contents: read
+
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
+
 jobs:
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+
     steps:
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
+
       - uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
           cache: true
-      - name: Verify formatting
+
+      - name: Verify Go formatting
+        shell: bash
         run: |
-          test -z "$(gofmt -l $(find . -name '*.go' -not -path './vendor/*'))"
+          unformatted=$(find . -name '*.go' -not -path './vendor/*' -exec gofmt -l {} +)
+
+          if [ -n "$unformatted" ]; then
+            echo "::error::The following Go files are not formatted:"
+            echo "$unformatted"
+            exit 1
+          fi
+
       - name: Check module files
         run: |
           go mod tidy
           git diff --exit-code -- go.mod go.sum
+
       - name: Vet
         run: go vet ./...
+
       - name: Test
         run: go test -race ./...
+
       - name: Build
         run: go build -trimpath -o exporter ./cmd/exporter
+
       - name: Check container build
         run: docker build -f dockerfile -t grandstream-snmp-exporter:ci .

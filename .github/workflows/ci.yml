@@ -1,5 +1,4 @@
-
-name: CI
+name: CI and GHCR publish
 
 on:
   push:
@@ -17,32 +16,33 @@ concurrency:
 
 jobs:
   test:
+    name: Check, test and build Go
     runs-on: ubuntu-latest
     timeout-minutes: 20
-
-    permissions:
-      contents: write
-
     steps:
       - name: Checkout
         uses: actions/checkout@v7
         with:
-          persist-credentials: true
+          persist-credentials: false
 
-      - name: Set up Go
+      - name: Set up Go (latest patch within 1.27)
         uses: actions/setup-go@v7
         with:
-          go-version-file: go.mod
+          go-version: '1.27'
+          check-latest: true
           cache: true
 
-      - name: Automatically format Go code
+      - name: Check Go formatting without modifying files
         shell: bash
         run: |
-          find . -type f -name '*.go' \
-            -not -path './vendor/*' \
-            -exec gofmt -w {} +
-
-          git diff --check
+          mapfile -d '' files < <(git ls-files -z -- '*.go')
+          if (( ${#files[@]} > 0 )); then
+            unformatted=$(gofmt -l "${files[@]}")
+            if [[ -n "$unformatted" ]]; then
+              printf 'Go files need formatting:\n%s\n' "$unformatted"
+              exit 1
+            fi
+          fi
 
       - name: Check module files
         shell: bash
@@ -53,25 +53,54 @@ jobs:
       - name: Vet
         run: go vet ./...
 
-      - name: Test
+      - name: Test with race detector
         run: go test -race ./...
 
       - name: Build
         run: go build -trimpath -o exporter ./cmd/exporter
 
-      - name: Check container build
-        run: docker build -f dockerfile -t grandstream-snmp-exporter:ci .
+  publish:
+    name: Build and publish linux/amd64 image
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: [test]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
-      - name: Commit formatting changes
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        shell: bash
-        run: |
-          if [ -n "$(git status --porcelain -- '*.go')" ]; then
-            git config user.name "github-actions[bot]"
-            git config user.email \
-              "41898282+github-actions[bot]@users.noreply.github.com"
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
 
-            git add -- '*.go'
-            git commit -m "style: auto-format Go code"
-            git push
-          fi
+      - name: Log in to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Container metadata
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=raw,value=latest
+            type=sha,format=short
+
+      - name: Build and publish image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: ./dockerfile
+          push: true
+          platforms: linux/amd64
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

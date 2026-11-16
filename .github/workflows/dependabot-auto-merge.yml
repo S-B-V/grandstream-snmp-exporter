@@ -1,10 +1,13 @@
 name: Dependabot auto-merge
+
 on:
   pull_request_target:
     types: [opened, reopened, synchronize]
+
 permissions:
   contents: write
   pull-requests: write
+
 jobs:
   dependabot:
     if: github.actor == 'dependabot[bot]'
@@ -15,6 +18,7 @@ jobs:
         uses: dependabot/fetch-metadata@v3
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Enable auto-merge for patch and minor updates
         if: ${{ steps.metadata.outputs.update-type == 'version-update:semver-patch' || steps.metadata.outputs.update-type == 'version-update:semver-minor' }}
         env:
